@@ -245,3 +245,7 @@ function hslToHex(h, s, l) {
 
     }
   }
+
+  function deletePostIt(e) {
+    clickedElement.parentElement.parentElement.parentElement.remove();
+  }
