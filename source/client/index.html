@@ -9,10 +9,48 @@
     <script src = "/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="static/index.css">
 </head>
-<body>
-    <button onclick="let path = window.location.href.split('?' )[0]; location.navigator.clipboard.writeText(path + '?id=' + code); console.log(path)" style="position: absolute;">Copy link</button>
-    <input type="color" name="" id="colorPick" style="position: absolute; top: 25px; left: 0px;">
-    <button style="position: absolute; top: 25px; left: 55px;" onclick="reset();">Reset board</button>
-    <canvas id="main"></canvas>
+<body onmousemove="onStickyDrag(event)">
+    <p id="share-link" style="display: none;">Share link</p>
+    <input type="color" name="" id="colorPick" style="position: absolute; top: 25px; left: 0px; display: none;">
+    <button style="position: absolute; top: 25px; left: 55px; display: none;" onclick="reset();">Reset board</button>
+    <div class="gray">
+        <img src="/static/Line 1.svg" class="">
+        <img src="/static/Line 1.svg" class="" style="position: absolute; left: calc(100% - 62px); transform: scaleX(-1); top: 0px;">
+        <img src="/static/Line 1.svg" class="" style="position: absolute; top: calc(100% - 63px); transform: scaleX(-1); left: 0px;">
+        <img src="/static/Line 1.svg" class="" style="position: absolute; left: calc(100% - 62px); top: calc(100% - 63px);">
+
+
+        <button>
+            <img src="/static/Group 1.svg" class="icon left">
+        </button>
+        <button>
+            <img src="/static/Group 2.svg" class="icon left">
+        </button>
+        <button>
+            <img src="/static/Group 8.svg" class="icon left">
+        </button>
+
+
+        <button style="visibility: none; position: absolute; right: 63px; top: -6px;">
+            <img src="/static/download-icon-link-1324760597539131174_0.svg" alt="" srcset="">
+        </button>
+        <button style="visibility: none; position: absolute; right: 130px; top: 3px;" onclick="reset();">
+            <img src="/static/Group 9.svg" alt="" srcset="" style="height: 38px;">
+        </button>
+
+
+
+        <canvas class="center" id="main"></canvas>
+
+        <div class="postit" style="position: absolute; left: 400px;">
+            <div class="postitHeader"  >
+                <img src="/static/Group 10.svg" alt="" srcset="" style="position: relative; top: 2px; left: 2px;" draggable="false">
+
+            </div>
+            <div class="postitBase">
+                <textarea name="" id="" cols="30" rows="10" style="width: 100%; padding: 0; border: 0; resize: none; height: 100%; background-color: #FBF78E;"></textarea>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

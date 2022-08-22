@@ -3,17 +3,35 @@ const socket = io();
 const urlParams = new URLSearchParams(window.location.search);
 const myParam = urlParams.get('id');
 const id = Math.floor(Math.random() * 100000)
-let color = "#000000";
+
+var mouseIsDown = false;
+var clickedElement = undefined;
+
+window.addEventListener('mousedown', function(e) {
+  clickedElement = e.target;
+  mouseIsDown = true;
+});
+
+window.addEventListener('mouseup', function(e) {
+  mouseIsDown = false;
+});
+
 let mouseColor = "hsl(" + Math.floor(Math.random() * 360) + ", 100%, 50%, 0.5"
+let color = mouseColor.slice(0, -5);
+console.log(color)
+document.getElementById("colorPick").value = hslToHex(color.split("(")[1].split(",")[0], 100, 50) ;
+
 var code;
 
 if (myParam != null) {
     socket.emit("join", myParam);
+    document.getElementById("share-link").innerText = window.location.href.split("?")[0] +"?id="+ myParam
 } else {
     socket.emit("create")
     socket.on("create_res", (res) => {
         code = res.id;
         window.history.pushState("object or string", "Title", "/?id=" + res.id);
+        document.getElementById("share-link").innerText = window.location.href.split("?")[0] +"?id="+ code
     })
 }
 socket.on("strokes", (strokes) => {
@@ -37,6 +55,8 @@ var ctx = document.getElementById("main").getContext("2d");
 function draw() {
     ctx.canvas.width  = window.innerWidth;
     ctx.canvas.height = window.innerHeight;
+    ctx.fillStyle = "white"
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.lineWidth = 15;
     ctx.lineCap = 'round';
 
@@ -116,12 +136,18 @@ let pX = null;
 let pY = null;
 document.body.addEventListener("mousemove", (e) => {
 
+    if (clickedElement.id != "main"){
+        return;
+    }
+
+    let mousePos = getMousePos(document.getElementById("main"), e);
+
     if (held) {
-        currentStroke.push([e.clientX, e.clientY, color])
+        currentStroke.push([mousePos.x, mousePos.y, color])
     }
 
     socket.emit("mouse", {
-        "mouse":[e.clientX, e.clientY],
+        "mouse":[mousePos.x, mousePos.y],
         "id":id,
         "color": mouseColor
         })
@@ -186,3 +212,36 @@ window.addEventListener("beforeunload", function (e) {
     // (e || window.event).returnValue = confirmationMessage; //Gecko + IE
     // return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
 });
+
+// https://stackoverflow.com/questions/36721830/convert-hsl-to-rgb-and-hex
+// Thanks icl7126!
+function hslToHex(h, s, l) {
+    l /= 100;
+    const a = s * Math.min(l, 1 - l) / 100;
+    const f = n => {
+      const k = (n + h / 30) % 12;
+      const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+      return Math.round(255 * color).toString(16).padStart(2, '0');   // convert to Hex and prefix "0" if needed
+    };
+    return `#${f(0)}${f(8)}${f(4)}`;
+  }
+
+  function  getMousePos(canvas, evt) {
+    var rect = canvas.getBoundingClientRect(), // abs. size of element
+      scaleX = canvas.width / rect.width,    // relationship bitmap vs. element for x
+      scaleY = canvas.height / rect.height;  // relationship bitmap vs. element for y
+  
+    return {
+      x: (evt.clientX - rect.left) * scaleX,   // scale mouse coordinates after they have
+      y: (evt.clientY - rect.top) * scaleY     // been adjusted to be relative to element
+    }
+  }
+
+
+  function onStickyDrag(e) {
+    if (mouseIsDown && clickedElement.classList.contains("postitHeader")) {
+        clickedElement.parentElement.style.left = (e.clientX - (280/2)) + "px";
+        clickedElement.parentElement.style.top = (e.clientY - 5) + "px";
+
+    }
+  }

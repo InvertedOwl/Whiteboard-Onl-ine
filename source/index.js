@@ -15,14 +15,25 @@ http.listen(port, () => {
 })
 
 let mice = {};
+let boards = {};
 
 io.on('connection', (socket) => {
   socket.on("join", (msg) => {
     socket.join(msg);
+    if (!boards[msg]) {
+      boards[msg] = {};
+    }
+    for (let id of Object.keys(boards[msg])) {
+      socket.emit("strokes", boards[msg][id])
+    }
   })
 
   socket.on("strokes", (strokes) => {
     for (let i of socket.rooms) {
+      if (!boards[i]) {
+        boards[i] = {};
+      }
+      boards[i][strokes.id] = strokes;
       io.to(i).emit("strokes", strokes)
     }
   })
@@ -35,12 +46,13 @@ io.on('connection', (socket) => {
 
   socket.on("reset", () => {
     for (let i of socket.rooms) {
+      boards[i] = {};
       io.to(i).emit("reset")
     }
   })
 
   socket.on("create", () => {
-    let id = createId(64);
+    let id = createId(32);
     socket.emit("create_res", {"id": id})
     for (let i of socket.rooms) {
       socket.leave(i);
@@ -66,3 +78,4 @@ function createId(length) {
   token = token.toString('hex');
   return token;
 }
+
