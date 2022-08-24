@@ -24,7 +24,12 @@ io.on('connection', (socket) => {
       boards[msg] = {};
     }
     for (let id of Object.keys(boards[msg])) {
-      socket.emit("strokes", boards[msg][id])
+      if (id.includes("stroke")) {
+        socket.emit("strokes", boards[msg][id])
+      }
+      if (id.includes("sticky")) {
+        socket.emit("sticky", boards[msg][id])
+      }
     }
   })
 
@@ -33,7 +38,7 @@ io.on('connection', (socket) => {
       if (!boards[i]) {
         boards[i] = {};
       }
-      boards[i][strokes.id] = strokes;
+      boards[i][strokes.id + "stroke"] = strokes;
       io.to(i).emit("strokes", strokes)
     }
   })
@@ -68,9 +73,27 @@ io.on('connection', (socket) => {
       console.log(mouse);
       io.emit("mouse", mouse)
     }
-
-
   });
+
+  socket.on("sticky", (data) => {
+    console.log(data);
+    for (let i of socket.rooms) {
+      if (!boards[i]) {
+        boards[i] = {};
+      }
+      boards[i][data.id + "sticky"] = data;
+      io.to(i).emit("sticky", data);
+    }
+  })
+  socket.on("deleteSticky", (id) => {
+    for (let i of socket.rooms) {
+      if (!boards[i]) {
+        boards[i] = {};
+      }
+      delete boards[i][id.id + "sticky"]
+      io.to(i).emit("deleteSticky", id);
+    }
+  })
 })
 
 function createId(length) {

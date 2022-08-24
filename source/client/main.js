@@ -3,6 +3,7 @@ const socket = io();
 const urlParams = new URLSearchParams(window.location.search);
 const myParam = urlParams.get('id');
 const id = Math.floor(Math.random() * 100000)
+const socketId = Math.floor(Math.random() * 100000);
 
 var mouseIsDown = false;
 var clickedElement = undefined;
@@ -14,6 +15,7 @@ window.addEventListener('mousedown', function(e) {
 
 window.addEventListener('mouseup', function(e) {
   mouseIsDown = false;
+//   clickedElement = undefined;
 });
 
 let mouseColor = "hsl(" + Math.floor(Math.random() * 360) + ", 100%, 50%, 0.5"
@@ -35,6 +37,7 @@ if (myParam != null) {
     })
 }
 socket.on("strokes", (strokes) => {
+    console.log(strokes);
     incomingStrokes[strokes.id] = strokes.strokes;
 
 })
@@ -46,6 +49,26 @@ socket.on("mouse", (mouse) => {
 socket.on("reset", () => {
     strokes.splice(0, strokes.length);
     incomingStrokes = {};
+})
+
+socket.on("sticky", (data) => {
+    let sticky = document.getElementById(data.id);
+    if (sticky == undefined) {
+        newPostIt(data.id)
+        sticky = document.getElementById(data.id);
+    }
+    if (data.socketid == socketId) {
+        return;
+    }
+    
+    sticky.style.left = data.mouse[0];
+    sticky.style.top = data.mouse[1];
+    
+    sticky.querySelector(".postitBase").querySelector(".postitArea").value = data.text;
+})
+
+socket.on("deleteSticky", (id) => {
+    document.getElementById(id.id).remove();
 })
 
 
@@ -136,6 +159,10 @@ let pX = null;
 let pY = null;
 document.body.addEventListener("mousemove", (e) => {
 
+    if (clickedElement == undefined) {
+        return;
+    }
+
     if (clickedElement.id != "main"){
         return;
     }
@@ -224,28 +251,64 @@ function hslToHex(h, s, l) {
       return Math.round(255 * color).toString(16).padStart(2, '0');   // convert to Hex and prefix "0" if needed
     };
     return `#${f(0)}${f(8)}${f(4)}`;
-  }
+}
 
-  function  getMousePos(canvas, evt) {
+function  getMousePos(canvas, evt) {
     var rect = canvas.getBoundingClientRect(), // abs. size of element
-      scaleX = canvas.width / rect.width,    // relationship bitmap vs. element for x
-      scaleY = canvas.height / rect.height;  // relationship bitmap vs. element for y
-  
+        scaleX = canvas.width / rect.width,    // relationship bitmap vs. element for x
+        scaleY = canvas.height / rect.height;  // relationship bitmap vs. element for y
+
     return {
-      x: (evt.clientX - rect.left) * scaleX,   // scale mouse coordinates after they have
-      y: (evt.clientY - rect.top) * scaleY     // been adjusted to be relative to element
+        x: (evt.clientX - rect.left) * scaleX,   // scale mouse coordinates after they have
+        y: (evt.clientY - rect.top) * scaleY     // been adjusted to be relative to element
     }
-  }
+}
 
 
-  function onStickyDrag(e) {
-    if (mouseIsDown && clickedElement.classList.contains("postitHeader")) {
+function onStickyDrag(e) {
+if (mouseIsDown && clickedElement.classList.contains("postitHeader")) {
         clickedElement.parentElement.style.left = (e.clientX - (280/2)) + "px";
         clickedElement.parentElement.style.top = (e.clientY - 5) + "px";
 
+        socket.emit("sticky", {
+            "mouse":[(e.clientX - (280/2)) + "px", (e.clientY - 5) + "px"],
+            "id":clickedElement.parentElement.id,
+            "text":clickedElement.parentElement.querySelector('.postitBase').querySelector(".postitArea").value,
+            "socketid":socketId
+        })
     }
-  }
+}
 
-  function deletePostIt(e) {
+function deletePostIt(e) {
+    console.log(clickedElement.parentElement.parentElement.parentElement);
+    socket.emit("deleteSticky", {
+        "id":clickedElement.parentElement.parentElement.parentElement.id,
+    })
     clickedElement.parentElement.parentElement.parentElement.remove();
-  }
+
+}
+
+function newPostIt(id = Math.floor((Math.random() * 98000) + 10000)) {
+    let postIt = `        <div class="postit" style="position: absolute; left: 400px;" id="${id}">
+    <div class="postitHeader"  >
+        <button style="all: none;" onclick="deletePostIt();">
+            <img src="/static/Group 10.svg" alt="" srcset="" style="position: relative; top: 2px; left: 2px;" draggable="false">
+        </button>
+
+    </div>
+    <div class="postitBase">
+        <textarea name="" class="postitArea" cols="30" rows="10" style="width: 100%; padding: 0; border: 0; resize: none; height: 100%; background-color: #FBF78E;" onkeyup="onPostItEdit(event)"></textarea>
+    </div>
+</div>`
+
+    document.getElementById("postitBase").innerHTML += postIt;
+}
+
+function onPostItEdit(e) {
+    socket.emit("sticky", {
+        "mouse":[e.target.parentElement.parentElement.style.left, e.target.parentElement.parentElement.style.top],
+        "id":e.target.parentElement.parentElement.id,
+        "text":e.target.value,
+        "socketid":socketId
+    })
+}
