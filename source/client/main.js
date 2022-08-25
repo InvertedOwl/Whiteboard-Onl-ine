@@ -4,6 +4,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const myParam = urlParams.get('id');
 const id = Math.floor(Math.random() * 100000)
 const socketId = Math.floor(Math.random() * 100000);
+let width = 30;
 
 var mouseIsDown = false;
 var clickedElement = undefined;
@@ -80,7 +81,6 @@ function draw() {
     ctx.canvas.height = window.innerHeight;
     ctx.fillStyle = "white"
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    ctx.lineWidth = 15;
     ctx.lineCap = 'round';
 
     for (let strokee of Object.keys(incomingStrokes)) {
@@ -90,6 +90,7 @@ function draw() {
         strokee = incomingStrokes[strokee];
         for (let stroke of strokee) {
             for (let i = 1; i < stroke.length; i++) {
+                ctx.lineWidth = stroke[i][3];
                 let p = stroke[i - 1];
                 let c  = stroke[i];
                 ctx.strokeStyle = p[2]
@@ -103,6 +104,7 @@ function draw() {
 
     for (let stroke of strokes) {
         for (let i = 1; i < stroke.length; i++) {
+            ctx.lineWidth = stroke[i][3];
             let p = stroke[i - 1];
             let c  = stroke[i];
             ctx.strokeStyle = p[2]
@@ -117,6 +119,7 @@ function draw() {
     for (let i = 1; i < currentStroke.length; i++) {
         let p = currentStroke[i - 1];
         let c  = currentStroke[i];
+        ctx.lineWidth = currentStroke[i][3];
         ctx.strokeStyle = p[2]
         ctx.beginPath()
         ctx.moveTo(p[0], p[1])
@@ -170,7 +173,7 @@ document.body.addEventListener("mousemove", (e) => {
     let mousePos = getMousePos(document.getElementById("main"), e);
 
     if (held) {
-        currentStroke.push([mousePos.x, mousePos.y, color])
+        currentStroke.push([mousePos.x, mousePos.y, color, width])
     }
 
     socket.emit("mouse", {
@@ -311,4 +314,9 @@ function onPostItEdit(e) {
         "text":e.target.value,
         "socketid":socketId
     })
+}
+function reset() {
+    console.log("SHIT");
+    color = "hsl(0, 100%, 100%)";
+    console.log(color);
 }

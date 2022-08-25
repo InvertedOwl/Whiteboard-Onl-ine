@@ -11,7 +11,7 @@
 </head>
 <body onmousemove="onStickyDrag(event)">
     <p id="share-link" style="display: none;">Share link</p>
-    <input type="color" name="" id="colorPick" style="position: absolute; top: 25px; left: 0px; display: none;">
+    <input type="color" name="" id="colorPick" style="position: absolute; top: 25px; left: 130px; visibility: hidden;">
     <button style="position: absolute; top: 25px; left: 55px; display: none;" onclick="reset();">Reset board</button>
     <div class="gray" id="base">
         <img src="/static/Line 1.svg" class="">
@@ -23,18 +23,19 @@
         <button onclick="newPostIt()">
             <img src="/static/Group 1.svg" class="icon left">
         </button>
-        <button>
+        <label for="colorPick">
             <img src="/static/Group 2.svg" class="icon left">
-        </button>
-        <button>
+        </label>
+        <button onclick="reset(); console.log('SHIT2')">
             <img src="/static/Group 8.svg" class="icon left">
         </button>
 
 
-        <button style="visibility: none; position: absolute; right: 63px; top: -6px;">
+        <button style="visibility: none; position: absolute; right: 63px; top: -6px;" onclick="navigator.clipboard.writeText(window.location); alert('Link copied!');">
             <img src="/static/download-icon-link-1324760597539131174_0.svg" alt="" srcset="">
+            <!-- <div style="background-color: lightgreen; width: 90px; height: 35px; position: absolute; z-index: 1000; text-align: center; font-size: 25px; right: -15px; top: 50px">Copied!</div> -->
         </button>
-        <button style="visibility: none; position: absolute; right: 130px; top: 3px;" onclick="reset();">
+        <button style="visibility: none; position: absolute; right: 130px; top: 3px;" >
             <img src="/static/Group 9.svg" alt="" srcset="" style="height: 38px;">
         </button>
 
